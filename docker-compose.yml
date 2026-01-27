@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Base de données
+  owncloud-db:
+    image: mariadb:10.6
+    container_name: owncloud_db_23U2914
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: RootPass123
+      MYSQL_DATABASE: owncloud
+      MYSQL_USER: owncloud
+      MYSQL_PASSWORD: DbPass123
+    volumes:
+      - ./owncloud_collabora.app/mysql:/var/lib/mysql  # BIND VOLUME obligatoire
+    networks:
+      - owncloud_network
+
+  # OwnCloud
+  owncloud:
+    image: owncloud:latest
+    container_name: owncloud_app_23U2914
+    restart: unless-stopped
+    depends_on:
+      - owncloud-db
+    ports:
+      - "5580:80"  # PORT HTTP pour OwnCloud + Collabora
+    environment:
+      OWNCLOUD_DB_TYPE: mysql
+      OWNCLOUD_DB_HOST: owncloud-db
+      OWNCLOUD_DB_NAME: owncloud
+      OWNCLOUD_DB_USERNAME: owncloud
+      OWNCLOUD_DB_PASSWORD: DbPass123
+      OWNCLOUD_ADMIN_USERNAME: admin
+      OWNCLOUD_ADMIN_PASSWORD: AdminPass123
+      # Configuration du domaine (important pour HTTPS)
+      TRUSTED_PROXIES: 172.0.0.0/8
+      OVERWRITEPROTOCOL: https
+      OVERWRITEHOST: 23U2914.systeme-res30.app
+      OVERWRITEWEBROOT: /
+    volumes:
+      - ./owncloud_collabora.app/owncloud_data:/var/www/html/data  # BIND VOLUME
+      - ./owncloud_collabora.app/config:/var/www/html/config
+      - ./owncloud_collabora.app/apps:/var/www/html/apps
+    networks:
+      - owncloud_network
+
+  # Collabora Online
+  collabora:
+    image: collabora/code:latest
+    container_name: collabora_online_23U2914
+    restart: unless-stopped
+    environment:
+      - domain=23U2914.systeme-res30.app  # Nom de  domaine
+      - DONT_GEN_SSL_CERT=yes
+      - username=cool
+      - password=CoolPass123
+      - extra_params=--o:ssl.enable=false
+    ports:
+      - "5590:9980"  # PORT HTTPS pour Collabora
+    networks:
+      - owncloud_network
+
+networks:
+  owncloud_network:
+    driver: bridge
