@@ -57,7 +57,7 @@ services:
       - password=CoolPass123
       - extra_params=--o:ssl.enable=false
     ports:
-      - "5590:9980"  # PORT HTTPS pour Collabora
+      - "9980:9980"  # PORT HTTPS pour Collabora
     networks:
       - owncloud_network
 
